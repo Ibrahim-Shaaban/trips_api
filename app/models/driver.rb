@@ -18,6 +18,9 @@ class Driver < ApplicationRecord
     end
   
     def self.handle_login(email,password)
+      unless email.present? || password.present?
+        raise "Invalid credentials"
+      end
       driver = find_by(email: email.downcase)
       unless driver.present?
         raise "Invalid credentials"

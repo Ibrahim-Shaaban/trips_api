@@ -1,7 +1,7 @@
 FactoryBot.define do
   factory :driver do
-    name { "MyString" }
-    email { "MyString" }
-    password_digest { "MyString" }
+    name { "test driver" }
+    email { "email@domain.com" }
+    password { "123456789" }
   end
 end
