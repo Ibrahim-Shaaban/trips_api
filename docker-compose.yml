@@ -1,0 +1,53 @@
+version: "3"
+services:
+  db:
+    image: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: my_db
+      
+
+  web:
+    build: .
+    command: bash -c "bundle exec rails db:create && bundle exec rails db:migrate && bundle exec rails s -p 3000 -b '0.0.0.0'"
+    volumes:
+      - .:/app
+    environment:
+      DB_HOST: db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: my_db
+      RAILS_ENV: development
+      REDIS_URL: redis://redis:6379/0
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+      - redis
+  
+  redis:
+    image: redis:6.2.5
+    ports:
+      - "6379:6379"
+
+  sidekiq:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - db
+      - redis
+    environment:
+      DB_HOST: db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: my_db
+      REDIS_URL: redis://redis:6379/0
+    command: bundle exec sidekiq -C config/sidekiq.yml
+
+volumes:
+  postgres_data: {}
