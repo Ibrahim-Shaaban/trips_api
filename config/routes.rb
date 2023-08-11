@@ -4,6 +4,8 @@ Rails.application.routes.draw do
       resources :drivers, only: [:create]
 
       post "sign_in", to: "drivers#sign_in"
+      resources :trips
+
 
     end
   end
