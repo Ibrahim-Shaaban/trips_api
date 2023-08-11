@@ -38,6 +38,7 @@ class Api::V1::TripsController < Api::BaseApi
   # DELETE /trips/1
   def destroy
     @trip.destroy
+    render json: "deleted successfully", status: :ok
   end
 
   private

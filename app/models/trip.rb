@@ -1,5 +1,8 @@
 class Trip < ApplicationRecord
   enum status: { ongoing: 0, completed: 1 }, _default: :ongoing
+
+  validates :name, presence: true
+  
   belongs_to :driver
 
 
