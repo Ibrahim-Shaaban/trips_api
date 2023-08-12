@@ -4,7 +4,11 @@ Rails.application.routes.draw do
       resources :drivers, only: [:create]
 
       post "sign_in", to: "drivers#sign_in"
-      resources :trips
+      resources :trips do
+        member do
+          put 'complete'
+        end
+      end
 
 
     end

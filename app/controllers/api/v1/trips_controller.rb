@@ -1,7 +1,7 @@
 class Api::V1::TripsController < Api::BaseApi
   rescue_from ActiveRecord::RecordNotFound, with: :record_not_found
   before_action :authorized
-  before_action :set_trip, only: %i[ show update destroy ]
+  before_action :set_trip, only: %i[ show update destroy complete]
 
   # GET /trips
   def index
@@ -33,6 +33,15 @@ class Api::V1::TripsController < Api::BaseApi
     else
       render json: @trip.errors, status: :unprocessable_entity
     end
+  end
+
+  def complete
+    if @trip.status == 'completed'
+      return render json: { error: "trip is aleady completed" }, status: :bad_request
+    end
+    @trip.status = "completed"
+    @trip.save
+    render  json: "successfully completed"
   end
 
   # DELETE /trips/1

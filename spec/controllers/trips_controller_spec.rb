@@ -139,7 +139,6 @@ RSpec.describe Api::V1::TripsController, type: :controller do
       context 'when a valid token is provided but wrong trip id' do
         it 'return error' do
           request.headers['Authorization'] = "Bearer #{auth_token}"
-          trip = create(:trip, driver: driver)
           params = {id: 'not valid id'}
           put :update, params: params
           expect(response).to have_http_status(:not_found)
@@ -159,6 +158,57 @@ RSpec.describe Api::V1::TripsController, type: :controller do
           expect(response).to have_http_status(:success)
           json_response = JSON.parse(response.body)
           expect(json_response['data']['attributes']['name']).to eq(updated_name)
+        end
+      end
+    end
+
+    describe 'PUT#complete' do
+      let(:driver) { create(:driver) }
+      let(:auth_token) { JsonWebToken.encode(id: driver.id) }
+  
+      context 'when no token is sent' do
+        it 'rejects the request' do
+          put :complete, params: {id: 1}
+          expect(response).to have_http_status(:unauthorized)
+          expect(response.body).to eq('unauthenticated driver')
+        end
+      end
+
+      context 'when a valid token is provided but wrong trip id' do
+        it 'return error' do
+          request.headers['Authorization'] = "Bearer #{auth_token}"
+          params = {id: 'not valid id'}
+          put :complete, params: params
+          expect(response).to have_http_status(:not_found)
+          json_response = JSON.parse(response.body)
+          expect(json_response['error']).to eq("Trip not found")
+        end
+      end
+
+  
+      context 'when a valid token is provided with valid trip id' do
+        it 'make the trip is completed' do
+          request.headers['Authorization'] = "Bearer #{auth_token}"
+          trip = create(:trip, driver: driver)
+          params = {id: trip.id}
+          put :complete, params: params
+          expect(response).to have_http_status(:success)
+          expect(response.body).to eq('successfully completed')
+          expect(trip.reload.status).to eq('completed')
+          
+        end
+      end
+
+      context 'when a valid token is provided with valid trip id but trip is already completed' do
+        it 'return error' do
+          request.headers['Authorization'] = "Bearer #{auth_token}"
+          trip = create(:trip, driver: driver, status: "completed")
+          params = {id: trip.id}
+          put :complete, params: params
+          expect(response).to have_http_status(:bad_request)
+          json_response = JSON.parse(response.body)
+          expect(json_response['error']).to eq('trip is aleady completed')
+          
         end
       end
     end
