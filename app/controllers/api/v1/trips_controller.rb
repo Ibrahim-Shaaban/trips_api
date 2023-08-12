@@ -52,6 +52,8 @@ class Api::V1::TripsController < Api::BaseApi
     else
       render json: @location.errors, status: :unprocessable_entity
     end
+    # another solution is to use background job worker to handle incoming requests
+    # UpdateTripLocationWorker.perform_async(@trip.id, params[:latitude], params[:longitude])
   end
 
   # DELETE /trips/1
