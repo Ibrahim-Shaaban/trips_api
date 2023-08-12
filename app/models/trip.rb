@@ -4,6 +4,7 @@ class Trip < ApplicationRecord
   validates :name, presence: true
   
   belongs_to :driver
+  has_many :locations
 
 
   def self.create_new_one(current_driver, name)

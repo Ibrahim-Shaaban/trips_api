@@ -1,7 +1,8 @@
 class Api::V1::TripsController < Api::BaseApi
   rescue_from ActiveRecord::RecordNotFound, with: :record_not_found
+  rescue_from ActiveRecord::RecordNotUnique, with: :record_is_existed_before
   before_action :authorized
-  before_action :set_trip, only: %i[ show update destroy complete]
+  before_action :set_trip, only: %i[ show update destroy complete update_location]
 
   # GET /trips
   def index
@@ -44,6 +45,15 @@ class Api::V1::TripsController < Api::BaseApi
     render  json: "successfully completed"
   end
 
+  def update_location
+    @location = Location.new(trip: @trip, latitude: params[:latitude], longitude: params[:longitude])
+    if @location.save
+      render json: "location updated successfully", status: :created
+    else
+      render json: @location.errors, status: :unprocessable_entity
+    end
+  end
+
   # DELETE /trips/1
   def destroy
     @trip.destroy
@@ -58,10 +68,14 @@ class Api::V1::TripsController < Api::BaseApi
 
     # Only allow a list of trusted parameters through.
     def trip_params
-      params.require(:trip).permit(:name)
+      params.require(:trip).permit(:name, :latitude, :longitude)
     end
 
     def record_not_found
       render json: { error: "Trip not found" }, status: :not_found
+    end
+    
+    def record_is_existed_before
+      render json: {error: "data is aleady existed"}, status: :conflict
     end
 end

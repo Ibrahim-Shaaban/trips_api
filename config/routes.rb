@@ -7,6 +7,7 @@ Rails.application.routes.draw do
       resources :trips do
         member do
           put 'complete'
+          put 'update_location'
         end
       end
 

@@ -3,4 +3,5 @@ class TripSerializer
   attributes :status, :name
 
   belongs_to :driver
+  has_many :locations
 end

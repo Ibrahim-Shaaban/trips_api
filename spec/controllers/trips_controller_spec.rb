@@ -213,4 +213,55 @@ RSpec.describe Api::V1::TripsController, type: :controller do
       end
     end
 
+    describe 'PUT#update_location' do
+      let(:driver) { create(:driver) }
+      let(:auth_token) { JsonWebToken.encode(id: driver.id) }
+  
+      context 'when no token is sent' do
+        it 'rejects the request' do
+          put :update_location, params: {id: 1}
+          expect(response).to have_http_status(:unauthorized)
+          expect(response.body).to eq('unauthenticated driver')
+        end
+      end
+
+      context 'when a valid token is provided but wrong trip id' do
+        it 'return error' do
+          request.headers['Authorization'] = "Bearer #{auth_token}"
+          params = {id: 'not valid id'}
+          put :update_location, params: params
+          expect(response).to have_http_status(:not_found)
+          json_response = JSON.parse(response.body)
+          expect(json_response['error']).to eq("Trip not found")
+        end
+      end
+
+  
+      context 'when a valid token is provided with valid trip id' do
+        it 'add location to trip' do
+          request.headers['Authorization'] = "Bearer #{auth_token}"
+          trip = create(:trip, driver: driver)
+          params = {id: trip.id, latitude: 40.7128,longitude: -74.0060}
+          put :update_location, params: params
+          expect(response).to have_http_status(:success)
+          last_trip_location = trip.locations.last
+          expect(last_trip_location.latitude).to eq(40.7128)
+          expect(last_trip_location.longitude).to eq(-74.0060)
+        end
+      end
+
+      context 'when a valid token is provided with valid trip id but location is already existed' do
+        it 'return error' do
+          request.headers['Authorization'] = "Bearer #{auth_token}"
+          trip = create(:trip, driver: driver)
+          location = create(:location, trip:trip, latitude: 40.7128,longitude: -74.0060)
+          params = {id: trip.id, latitude: 40.7128,longitude: -74.0060}
+          put :update_location, params: params
+          expect(response).to have_http_status(:conflict)
+          json_response = JSON.parse(response.body)
+          expect(json_response['error']).to eq('data is aleady existed')
+        end
+      end
+    end
+
 end
